@@ -4,6 +4,7 @@ import org.apache.spark.ml.param.{Param, Params, StringArrayParam}
 
 /**
   * Created by Nir.Laor on 1/23/2017.
+  * A copy of Spark 'HasOutputCol' due to their extra strong privacy.
   */
 trait HasOutputCol extends Params {
 

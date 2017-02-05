@@ -4,7 +4,9 @@ import com.tms.ml.feature.ngram.NgramModel
 import ml.combust.mleap.runtime.MleapContext
 import ml.combust.mleap.runtime.function.UserDefinedFunction
 import ml.combust.mleap.runtime.transformer.{FeatureTransformer, Transformer}
-import ml.combust.mleap.tensor.SparseTensor
+import org.apache.spark.ml.linalg.Vectors
+import ml.combust.mleap.tensor.Tensor
+import ml.combust.mleap.runtime.converter.VectorConverters._
 
 
 /**
@@ -22,17 +24,14 @@ class NgramMleapFeaturesExtractor(override val uid: String = Transformer.uniqueN
   // this val is created in the class <init>. the context passed to the constructor should be aware
   // of FeatureCustomType in order to properly create the class.
   //
-  // the model extracts Features, which are desinged to be more human-readable (than the features exctracted by Sparks'
-  // provided features extractors).
-  // todo: convert the features Seq to vector of their values (what type of vector?)
-  override val exec: UserDefinedFunction = (value: Seq[String]) => {
-    val features = model.extractFeatures(value)
-    val indices = features.map{_.id}
-    val values = features.map{_.value}.toArray
+  // the model extracts Features, which are designed to be more human-readable (than the features extracted by Sparks'
+  // provided features extractors), for future Reports module.
+  // The features are converted to a Seq of (index, value) in order to create a Vector
+  override val exec: UserDefinedFunction = (value: Seq[String]) => extractFeatures(value): Tensor[Double]
 
-    SparseTensor[Double](indices =  Seq(indices),
-      values = values,
-      dimensions = Seq(1))
+  def extractFeatures(value: Seq[String]): Tensor[Double] ={
+    val features = model.extractFeatures(value).map{f=> (f.id, f.value)}
+    Vectors.sparse(model.numFeatures, features)
   }
 
 }
